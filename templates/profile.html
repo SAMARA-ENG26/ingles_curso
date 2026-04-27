@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Meu Perfil — ETJ{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-bg {
+  min-height: 100vh;
+  background: radial-gradient(ellipse at 50% 0%, rgba(191,0,255,0.08) 0%, transparent 60%), var(--bg-deep);
+  padding: 20px 16px;
+}
+
+.avatar-ring {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--neon-purple), var(--neon-pink));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.2rem;
+  box-shadow: 0 0 30px rgba(191,0,255,0.4);
+  margin: 0 auto 16px;
+}
+
+.stat-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  flex: 1;
+}
+.stat-number {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.6rem;
+  font-weight: 900;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+.history-item:last-child { border-bottom: none; }
+
+.level-road {
+  position: relative;
+  padding: 12px 0;
+}
+.level-node {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+.level-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 900;
+  flex-shrink: 0;
+  border: 2px solid;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-bg">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('dashboard') }}" style="color:var(--text-dim);text-decoration:none;font-size:1.3rem;">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2 style="font-family:Orbitron,monospace;font-size:1.1rem;font-weight:900;color:var(--neon-purple);margin-bottom:0;">
+      MEU PERFIL
+    </h2>
+    <a href="{{ url_for('logout') }}" class="ms-auto" style="color:var(--text-dim);text-decoration:none;font-family:Orbitron,monospace;font-size:0.65rem;">
+      <i class="bi bi-box-arrow-right"></i> SAIR
+    </a>
+  </div>
+
+  <!-- Avatar & Name -->
+  <div style="text-align:center;margin-bottom:24px;">
+    <div class="avatar-ring">👨‍💻</div>
+    <h3 style="font-family:Orbitron,monospace;font-size:1.2rem;font-weight:900;margin-bottom:4px;">
+      {{ user.username }}
+    </h3>
+    <span class="badge-level">{{ user.get_level_title() }} · LVL {{ user.level }}</span>
+    <p class="text-dim mt-2" style="font-size:0.75rem;">{{ user.email }}</p>
+    <p class="text-dim" style="font-size:0.72rem;font-family:Orbitron,monospace;">
+      🌿 BioHome · Manaus, Amazonas
+    </p>
+  </div>
+
+  <!-- Stats -->
+  <div class="d-flex gap-3 mb-4">
+    <div class="stat-box">
+      <div class="stat-number neon-text-cyan">{{ user.xp }}</div>
+      <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:var(--text-dim);">XP TOTAL</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number neon-text-pink">{{ completed|length }}</div>
+      <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:var(--text-dim);">LIÇÕES</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number neon-text-green">{{ ((completed|length / total) * 100)|int if total else 0 }}%</div>
+      <div style="font-family:Orbitron,monospace;font-size:0.6rem;color:var(--text-dim);">PROGRESSO</div>
+    </div>
+  </div>
+
+  <!-- XP to next level -->
+  {% set xp_for_next = user.level * 200 %}
+  {% set xp_in_level = user.xp - (user.level - 1) * 200 %}
+  {% set pct = [(xp_in_level / 200 * 100)|int, 100]|min %}
+  <div style="background:var(--bg-card);border:1px solid var(--border-glow);border-radius:14px;padding:16px;margin-bottom:24px;">
+    <div class="d-flex justify-content-between mb-2">
+      <span style="font-family:Orbitron,monospace;font-size:0.7rem;color:var(--text-dim);">PRÓXIMO NÍVEL</span>
+      <span style="font-family:Orbitron,monospace;font-size:0.75rem;color:var(--neon-purple);">{{ xp_in_level }}/200 XP</span>
+    </div>
+    <div class="xp-bar-track">
+      <div class="xp-bar-fill" style="width:{{ pct }}%;background:linear-gradient(90deg,var(--neon-purple),var(--neon-pink));"></div>
+    </div>
+    {% if user.level < 6 %}
+    <p class="text-dim mt-2 mb-0" style="font-size:0.72rem;">
+      Faltam {{ 200 - xp_in_level }} XP para <strong style="color:var(--neon-purple);">{{ ['', 'Junior Dev', 'Mid-Level Dev', 'Senior Dev', 'Tech Lead', 'CTO'][user.level] }}</strong>
+    </p>
+    {% else %}
+    <p style="color:var(--neon-green);font-size:0.75rem;font-family:Orbitron,monospace;margin-top:8px;margin-bottom:0;">
+      🏆 NÍVEL MÁXIMO ATINGIDO!
+    </p>
+    {% endif %}
+  </div>
+
+  <!-- Level roadmap -->
+  <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:14px;">
+    🗺️ ROADMAP DE NÍVEL
+  </p>
+
+  <div style="background:var(--bg-card);border:1px solid var(--border-glow);border-radius:16px;padding:18px;margin-bottom:24px;">
+    {% set level_data = [
+      (1, 'Rookie Dev', '🌱', 'var(--neon-green)', 0),
+      (2, 'Junior Dev', '💻', 'var(--neon-cyan)', 200),
+      (3, 'Mid-Level Dev', '⚡', 'var(--neon-orange)', 400),
+      (4, 'Senior Dev', '🔥', 'var(--neon-pink)', 600),
+      (5, 'Tech Lead', '⚔️', 'var(--neon-purple)', 800),
+      (6, 'CTO', '🚀', '#ffd700', 1000),
+    ] %}
+    {% for lvl, title, emoji, color, xp_req in level_data %}
+    <div class="level-node">
+      <div class="level-circle {% if user.level >= lvl %}pulse-cyan{% endif %}"
+           style="border-color:{{ color }};background:{% if user.level >= lvl %}{{ color }}20{% else %}transparent{% endif %};color:{{ color if user.level >= lvl else 'var(--text-dim)' }};">
+        {% if user.level > lvl %}✓{% else %}{{ lvl }}{% endif %}
+      </div>
+      <div class="flex-grow-1">
+        <div style="font-weight:700;font-size:0.88rem;color:{% if user.level >= lvl %}var(--text-main){% else %}var(--text-dim){% endif %};">
+          {{ emoji }} {{ title }}
+        </div>
+        <div style="font-family:Orbitron,monospace;font-size:0.62rem;color:var(--text-dim);">
+          {{ xp_req }} XP
+        </div>
+      </div>
+      {% if user.level == lvl %}
+      <span style="font-family:Orbitron,monospace;font-size:0.6rem;color:{{ color }};background:{{ color }}15;border:1px solid {{ color }}40;border-radius:99px;padding:3px 10px;">
+        ATUAL
+      </span>
+      {% elif user.level > lvl %}
+      <i class="bi bi-check-circle-fill" style="color:var(--neon-green);"></i>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Recent activity -->
+  {% if lessons_detail %}
+  <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;">
+    📜 ATIVIDADE RECENTE
+  </p>
+  <div style="background:var(--bg-card);border:1px solid var(--border-glow);border-radius:16px;padding:16px;margin-bottom:24px;">
+    {% for lp in lessons_detail %}
+    <div class="history-item">
+      <div style="width:34px;height:34px;border-radius:10px;background:rgba(0,255,159,0.1);border:1px solid rgba(0,255,159,0.3);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+        <i class="bi bi-check-lg" style="color:var(--neon-green);"></i>
+      </div>
+      <div class="flex-grow-1">
+        <div style="font-size:0.82rem;font-weight:600;">Módulo {{ lp.module_id }} · Lição {{ lp.lesson_id }}</div>
+        {% if lp.completed_at %}
+        <div style="font-size:0.72rem;color:var(--text-dim);">
+          {{ lp.completed_at.strftime('%d/%m/%Y às %H:%M') }}
+        </div>
+        {% endif %}
+      </div>
+      <span style="font-family:Orbitron,monospace;font-size:0.72rem;color:var(--neon-cyan);">+{{ lp.xp_earned }} XP</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <p class="text-center text-dim" style="font-size:0.72rem;font-family:Orbitron,monospace;margin-bottom:24px;">
+    🌿 ENGLISH TECH JOURNEY · BIOHOME · MANAUS
+  </p>
+
+</div>
+{% endblock %}

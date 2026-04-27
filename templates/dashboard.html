@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — English Tech Journey{% endblock %}
+
+{% block extra_css %}
+<style>
+.dashboard-bg {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(0,212,255,0.06) 0%, transparent 60%),
+    var(--bg-deep);
+  min-height: 100vh;
+  padding: 20px 16px;
+}
+
+.hero-greeting {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+
+.xp-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.module-card {
+  background: var(--bg-card);
+  border-radius: 16px;
+  border: 1px solid var(--border-glow);
+  padding: 16px;
+  margin-bottom: 12px;
+  text-decoration: none;
+  color: var(--text-main);
+  display: block;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.module-card:hover {
+  transform: translateX(4px);
+  box-shadow: 4px 0 24px rgba(0,212,255,0.12);
+  color: var(--text-main);
+}
+.module-card:active { transform: scale(0.98); }
+
+.module-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.module-progress-bar {
+  height: 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.module-progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 1s ease;
+}
+
+.special-btn {
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: transform 0.2s, box-shadow 0.2s;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.special-btn:active { transform: scale(0.97); }
+
+.section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-bg">
+
+  <!-- Greeting -->
+  <div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+      <p class="text-dim mb-0" style="font-size:0.8rem;">Olá,</p>
+      <p class="hero-greeting mb-0">{{ user.username }} 👋</p>
+      <span class="badge-level mt-1 d-inline-block">{{ user.get_level_title() }}</span>
+    </div>
+    <div class="text-end">
+      <div style="font-family:Orbitron,monospace;font-size:1.6rem;font-weight:900;color:var(--neon-cyan);text-shadow:0 0 20px rgba(0,212,255,0.4);">
+        {{ user.xp }}
+      </div>
+      <div style="font-size:0.7rem;color:var(--text-dim);font-family:Orbitron,monospace;">XP TOTAL</div>
+    </div>
+  </div>
+
+  <!-- XP Progress -->
+  <div class="xp-section mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <span style="font-family:Orbitron,monospace;font-size:0.7rem;color:var(--text-dim);">PROGRESSO GERAL</span>
+      <span style="font-family:Orbitron,monospace;font-size:0.85rem;color:var(--neon-pink);">{{ progress_pct }}%</span>
+    </div>
+    <div class="xp-bar-track">
+      <div class="xp-bar-fill" style="width:{{ progress_pct }}%;"></div>
+    </div>
+    <p class="text-dim mt-2 mb-0" style="font-size:0.75rem;">
+      <i class="bi bi-check2-circle me-1"></i>{{ completed|length }} / {{ total_lessons }} lições concluídas
+    </p>
+  </div>
+
+  <!-- Modules -->
+  <p class="section-title">📚 MÓDULOS DO CURSO</p>
+
+  {% for mod in modules %}
+  {% set done = namespace(count=0) %}
+  {% for les in mod.lessons %}
+    {% if (mod.id, les.id) in completed %}
+      {% set done.count = done.count + 1 %}
+    {% endif %}
+  {% endfor %}
+  {% set mod_pct = ((done.count / mod.lessons|length) * 100)|int %}
+
+  <a href="{{ url_for('module', module_id=mod.id) }}" class="module-card">
+    <div class="d-flex align-items-center gap-3">
+      <div class="module-icon" style="background: {{ mod.color }}20; border: 1px solid {{ mod.color }}40;">
+        {{ mod.icon }}
+      </div>
+      <div class="flex-grow-1">
+        <div class="d-flex justify-content-between align-items-center">
+          <span style="font-family:Orbitron,monospace;font-size:0.8rem;font-weight:700;">{{ mod.name }}</span>
+          <span style="font-size:0.7rem;color:{{ mod.color }};font-family:Orbitron,monospace;">{{ done.count }}/{{ mod.lessons|length }}</span>
+        </div>
+        <p class="text-dim mb-0" style="font-size:0.78rem;">{{ mod.description }}</p>
+        <div class="module-progress-bar">
+          <div class="module-progress-fill" style="width:{{ mod_pct }}%; background:{{ mod.color }};box-shadow:0 0 8px {{ mod.color }};"></div>
+        </div>
+      </div>
+      <i class="bi bi-chevron-right" style="color:var(--text-dim);"></i>
+    </div>
+  </a>
+  {% endfor %}
+
+  <!-- Special Features -->
+  <div class="glow-divider"></div>
+  <p class="section-title">⚡ FERRAMENTAS DE PRÁTICA</p>
+
+  <div class="d-flex flex-column gap-3">
+    <a href="{{ url_for('shadowing') }}" class="special-btn" style="background:rgba(255,45,120,0.08);border:1px solid rgba(255,45,120,0.3);color:var(--neon-pink);">
+      <span style="font-size:1.8rem;">🎙️</span>
+      <div>
+        <div>SHADOWING</div>
+        <div style="font-size:0.65rem;color:var(--text-dim);font-weight:400;font-family:Rajdhani,sans-serif;">Brooklyn Nine-Nine Phrases</div>
+      </div>
+      <i class="bi bi-chevron-right ms-auto"></i>
+    </a>
+    <a href="{{ url_for('crossfit') }}" class="special-btn" style="background:rgba(0,212,255,0.08);border:1px solid rgba(0,212,255,0.3);color:var(--neon-cyan);">
+      <span style="font-size:1.8rem;">🏋️</span>
+      <div>
+        <div>CROSSFIT VOICE</div>
+        <div style="font-size:0.65rem;color:var(--text-dim);font-weight:400;font-family:Rajdhani,sans-serif;">Descreva o exercício em inglês</div>
+      </div>
+      <i class="bi bi-chevron-right ms-auto"></i>
+    </a>
+  </div>
+
+  <p class="text-center text-dim mt-4" style="font-size:0.72rem;font-family:Orbitron,monospace;">
+    🌿 BIOHOME · MANAUS · AMAZÔNIA
+  </p>
+
+</div>
+{% endblock %}

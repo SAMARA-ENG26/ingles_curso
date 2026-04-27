@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card bg-dark text-light p-4 border-0 shadow-lg" style="width: 100%; max-width: 400px; border-radius: 15px; background: rgba(30, 30, 30, 0.9) !important;">
+        <h2 class="text-center mb-4" style="font-family: 'Orbitron', sans-serif; color: #ff00de;">LOGIN</h2>
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label">Email ou Usuário</label>
+                <input type="text" name="username" class="form-control bg-dark text-white border-secondary" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Senha</label>
+                <input type="password" name="password" class="form-control bg-dark text-white border-secondary" required>
+            </div>
+            <button type="submit" class="btn btn-outline-info w-100 py-2 mt-3" style="border-radius: 50px;">ENTRAR</button>
+        </form>
+        <p class="text-center mt-3 small text-muted">A preparar o teu ambiente de Engenharia...</p>
+    </div>
+</div>
+{% endblock %}

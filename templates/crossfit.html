@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}CrossFit Voice — ETJ{% endblock %}
+
+{% block extra_css %}
+<style>
+.crossfit-bg {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(0,212,255,0.1) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(191,0,255,0.08) 0%, transparent 50%),
+    var(--bg-deep);
+  padding: 20px 16px;
+}
+
+.exercise-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(0,212,255,0.35);
+  border-radius: 24px;
+  padding: 28px 22px;
+  margin-bottom: 20px;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,212,255,0.1);
+}
+
+.exercise-emoji {
+  font-size: 4rem;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.exercise-name {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--neon-cyan);
+  text-shadow: 0 0 24px rgba(0,212,255,0.5);
+  margin-bottom: 8px;
+}
+
+.exercise-desc {
+  font-size: 0.92rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+  background: rgba(0,212,255,0.05);
+  border-radius: 10px;
+  border-left: 3px solid var(--neon-cyan);
+  text-align: left;
+}
+
+/* Voice recording section */
+.voice-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 20px;
+  padding: 22px;
+  margin-bottom: 20px;
+}
+
+.record-ring {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  border: 3px solid var(--neon-cyan);
+  background: rgba(0,212,255,0.07);
+  color: var(--neon-cyan);
+  font-size: 2.2rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 12px;
+  position: relative;
+}
+.record-ring.recording {
+  border-color: var(--neon-pink);
+  background: rgba(255,45,120,0.15);
+  color: var(--neon-pink);
+  box-shadow: 0 0 0 0 rgba(255,45,120,0.5);
+  animation: ripple 1.2s infinite;
+}
+@keyframes ripple {
+  0%   { box-shadow: 0 0 0 0 rgba(255,45,120,0.4); }
+  70%  { box-shadow: 0 0 0 20px rgba(255,45,120,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,45,120,0); }
+}
+
+.transcript-area {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--border-glow);
+  border-radius: 12px;
+  padding: 14px;
+  min-height: 80px;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin-top: 16px;
+}
+.transcript-area.has-content { color: var(--text-main); }
+
+/* Score section */
+.score-card {
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+  display: none;
+}
+.score-card.show { display: block; }
+
+/* Challenge cards */
+.challenge-tip {
+  background: var(--bg-card);
+  border: 1px solid rgba(191,0,255,0.2);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="crossfit-bg">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('dashboard') }}" style="color:var(--text-dim);text-decoration:none;font-size:1.3rem;">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2 style="font-family:Orbitron,monospace;font-size:1.1rem;font-weight:900;color:var(--neon-cyan);margin-bottom:0;text-shadow:0 0 20px rgba(0,212,255,0.4);">
+      ⚡ CROSSFIT VOICE
+    </h2>
+  </div>
+
+  <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px;">
+    Você receberá um exercício do CrossFit. Descreva como fazê-lo <strong style="color:var(--neon-cyan);">em inglês</strong> usando o microfone!
+  </p>
+
+  <!-- Exercise Card -->
+  <div class="exercise-card" id="exerciseCard">
+    <span class="exercise-emoji float-icon" id="exerciseEmoji">{{ exercise.emoji }}</span>
+    <div class="exercise-name" id="exerciseName">{{ exercise.name }}</div>
+    <div class="exercise-desc" id="exerciseDesc">
+      <strong>How to do it:</strong> {{ exercise.description }}
+    </div>
+    <button onclick="getNewExercise()" class="btn btn-neon-cyan btn-sm px-4 py-2">
+      <i class="bi bi-shuffle me-1"></i>NOVO EXERCÍCIO
+    </button>
+  </div>
+
+  <!-- Challenge -->
+  <div style="background:rgba(191,0,255,0.06);border:1px solid rgba(191,0,255,0.25);border-radius:16px;padding:16px;margin-bottom:20px;">
+    <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:1.5px;color:var(--neon-purple);margin-bottom:10px;">
+      🎯 SEU DESAFIO
+    </p>
+    <p style="font-size:0.88rem;color:var(--text-main);margin-bottom:0;">
+      Descreva o exercício <strong>{{ exercise.name }}</strong> em inglês!
+      Use palavras como <em style="color:var(--neon-cyan);">"you need to...", "start by...", "make sure to...", "the key is..."</em>
+    </p>
+  </div>
+
+  <!-- Voice Section -->
+  <div class="voice-section">
+    <p style="font-family:Orbitron,monospace;font-size:0.7rem;letter-spacing:1.5px;color:var(--text-dim);text-align:center;margin-bottom:20px;">
+      🎙️ DESCREVA EM INGLÊS
+    </p>
+
+    <button class="record-ring" id="recordBtn" onclick="toggleRecording()">
+      <i class="bi bi-mic-fill" id="recIcon"></i>
+    </button>
+    <p style="font-family:Orbitron,monospace;font-size:0.65rem;color:var(--text-dim);text-align:center;" id="recStatus">
+      TOQUE PARA FALAR
+    </p>
+
+    <div class="transcript-area" id="transcriptArea">
+      Toque no microfone e descreva o exercício em inglês...
+    </div>
+
+    <div class="score-card" id="scoreCard">
+      <!-- filled by JS -->
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button onclick="clearTranscript()" class="btn btn-sm w-50 py-2"
+              style="background:rgba(255,255,255,0.05);border:1px solid var(--border-glow);color:var(--text-dim);border-radius:10px;font-family:Orbitron,monospace;font-size:0.65rem;">
+        <i class="bi bi-trash me-1"></i>LIMPAR
+      </button>
+      <button onclick="analyzeMyAnswer()" class="btn btn-neon-pink btn-sm w-50 py-2" id="analyzeBtn">
+        <i class="bi bi-lightning-fill me-1"></i>ANALISAR
+      </button>
+    </div>
+  </div>
+
+  <!-- Tips -->
+  <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;">
+    💡 FRASES ÚTEIS
+  </p>
+
+  <div class="challenge-tip">
+    <div style="font-weight:700;color:var(--neon-cyan);font-size:0.88rem;">"You need to start in a standing position..."</div>
+    <div style="font-size:0.75rem;color:var(--text-dim);">Para descrever a posição inicial</div>
+  </div>
+  <div class="challenge-tip">
+    <div style="font-weight:700;color:var(--neon-cyan);font-size:0.88rem;">"The key movement is to drive with your legs..."</div>
+    <div style="font-size:0.75rem;color:var(--text-dim);">Para explicar o movimento principal</div>
+  </div>
+  <div class="challenge-tip">
+    <div style="font-weight:700;color:var(--neon-cyan);font-size:0.88rem;">"Make sure to keep your core tight throughout."</div>
+    <div style="font-size:0.75rem;color:var(--text-dim);">Para dar dicas de forma</div>
+  </div>
+  <div class="challenge-tip">
+    <div style="font-weight:700;color:var(--neon-cyan);font-size:0.88rem;">"Land softly to protect your joints."</div>
+    <div style="font-size:0.75rem;color:var(--text-dim);">Para mencionar segurança</div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let isRecording = false;
+let recognition = null;
+let fullTranscript = '';
+
+async function getNewExercise() {
+  try {
+    const res = await fetch('/api/random_exercise');
+    const data = await res.json();
+    document.getElementById('exerciseEmoji').textContent = data.emoji;
+    document.getElementById('exerciseName').textContent = data.name;
+    document.getElementById('exerciseDesc').innerHTML = '<strong>How to do it:</strong> ' + data.description;
+    clearTranscript();
+    document.getElementById('scoreCard').classList.remove('show');
+  } catch(e) {}
+}
+
+function toggleRecording() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('transcriptArea').textContent =
+      '⚠️ Use Chrome ou Edge para usar o microfone. Mas pratique em voz alta mesmo assim!';
+    return;
+  }
+  if (isRecording) stopRecording();
+  else startRecording();
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = true;
+  recognition.continuous = true;
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    let final = '';
+    for (let r of e.results) {
+      if (r.isFinal) final += r[0].transcript + ' ';
+      else interim += r[0].transcript;
+    }
+    if (final) fullTranscript += final;
+    const ta = document.getElementById('transcriptArea');
+    ta.textContent = (fullTranscript + interim) || '...';
+    ta.classList.add('has-content');
+  };
+
+  recognition.onend = () => { if (isRecording) recognition.start(); };
+  recognition.onerror = () => stopRecording();
+  recognition.start();
+  isRecording = true;
+
+  document.getElementById('recordBtn').classList.add('recording');
+  document.getElementById('recIcon').className = 'bi bi-stop-fill';
+  document.getElementById('recStatus').textContent = 'GRAVANDO... FALE EM INGLÊS!';
+}
+
+function stopRecording() {
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  isRecording = false;
+  document.getElementById('recordBtn').classList.remove('recording');
+  document.getElementById('recIcon').className = 'bi bi-mic-fill';
+  document.getElementById('recStatus').textContent = 'TOQUE PARA FALAR';
+}
+
+function clearTranscript() {
+  fullTranscript = '';
+  stopRecording();
+  const ta = document.getElementById('transcriptArea');
+  ta.textContent = 'Toque no microfone e descreva o exercício em inglês...';
+  ta.classList.remove('has-content');
+  document.getElementById('scoreCard').classList.remove('show');
+}
+
+function analyzeMyAnswer() {
+  const text = fullTranscript.trim();
+  if (!text) {
+    alert('Grave sua resposta primeiro!');
+    return;
+  }
+
+  const exerciseName = document.getElementById('exerciseName').textContent.toLowerCase();
+  const wordCount = text.split(/\s+/).filter(Boolean).length;
+
+  // Simple local analysis
+  const goodWords = ['you', 'need', 'start', 'position', 'legs', 'arms', 'keep', 'make sure',
+                     'core', 'drive', 'jump', 'push', 'pull', 'land', 'movement', 'body'];
+  const matched = goodWords.filter(w => text.toLowerCase().includes(w)).length;
+  const score = Math.min(100, Math.round((matched / goodWords.length) * 100 + (wordCount > 20 ? 20 : wordCount)));
+
+  let color = score >= 70 ? 'var(--neon-green)' : score >= 40 ? 'var(--neon-orange)' : 'var(--neon-pink)';
+  let emoji = score >= 70 ? '🔥' : score >= 40 ? '💪' : '📚';
+  let msg = score >= 70
+    ? 'Excelente descrição! Seu inglês está fluindo bem.'
+    : score >= 40
+    ? 'Boa tentativa! Tente incluir mais detalhes do movimento.'
+    : 'Continue praticando! Tente descrever cada parte do movimento.';
+
+  const sc = document.getElementById('scoreCard');
+  sc.innerHTML = `
+    <div style="background:rgba(0,0,0,0.3);border:1px solid ${color}40;border-radius:12px;padding:16px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:8px;">${emoji}</div>
+      <div style="font-family:Orbitron,monospace;font-size:1.8rem;font-weight:900;color:${color};text-shadow:0 0 20px ${color};">${score}</div>
+      <div style="font-family:Orbitron,monospace;font-size:0.65rem;color:var(--text-dim);margin-bottom:10px;">PONTUAÇÃO</div>
+      <div style="font-size:0.85rem;color:var(--text-main);">${msg}</div>
+      <div style="font-size:0.75rem;color:var(--text-dim);margin-top:8px;">${wordCount} palavras utilizadas</div>
+    </div>
+  `;
+  sc.classList.add('show');
+}
+</script>
+{% endblock %}

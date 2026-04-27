@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+{% block title %}Shadowing — English Tech Journey{% endblock %}
+
+{% block extra_css %}
+<style>
+.shadow-bg {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(255,45,120,0.1) 0%, transparent 60%),
+    var(--bg-deep);
+  padding: 20px 16px;
+}
+
+.main-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255,45,120,0.3);
+  border-radius: 24px;
+  padding: 28px 22px;
+  margin-bottom: 20px;
+  box-shadow: 0 8px 40px rgba(255,45,120,0.1);
+  text-align: center;
+}
+
+.tv-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255,45,120,0.1);
+  border: 1px solid rgba(255,45,120,0.4);
+  border-radius: 99px;
+  padding: 6px 16px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  color: var(--neon-pink);
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+}
+
+.phrase-text {
+  font-size: clamp(1.1rem, 4vw, 1.5rem);
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--text-main);
+  margin-bottom: 16px;
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.character-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,140,0,0.1);
+  border: 1px solid rgba(255,140,0,0.3);
+  border-radius: 99px;
+  padding: 4px 14px;
+  font-family: 'Orbitron', monospace;
+  font-size: 0.65rem;
+  color: var(--neon-orange);
+  margin-bottom: 16px;
+}
+
+.context-tag {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  font-style: italic;
+  min-height: 40px;
+}
+
+/* Voice visualizer */
+.voice-viz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 50px;
+  margin: 20px 0;
+}
+.viz-bar {
+  width: 4px;
+  border-radius: 99px;
+  background: var(--neon-pink);
+  animation: none;
+  transition: height 0.1s;
+  height: 6px;
+  opacity: 0.5;
+}
+.voice-viz.active .viz-bar {
+  animation: soundBars 0.6s ease-in-out infinite alternate;
+}
+.viz-bar:nth-child(1) { animation-delay: 0s; }
+.viz-bar:nth-child(2) { animation-delay: 0.1s; }
+.viz-bar:nth-child(3) { animation-delay: 0.2s; }
+.viz-bar:nth-child(4) { animation-delay: 0.05s; }
+.viz-bar:nth-child(5) { animation-delay: 0.15s; }
+.viz-bar:nth-child(6) { animation-delay: 0.25s; }
+.viz-bar:nth-child(7) { animation-delay: 0.08s; }
+
+@keyframes soundBars {
+  from { height: 6px; opacity: 0.5; }
+  to   { height: 36px; opacity: 1; box-shadow: 0 0 8px var(--neon-pink); }
+}
+
+.btn-shadow-main {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  border: 2.5px solid var(--neon-pink);
+  background: rgba(255,45,120,0.1);
+  color: var(--neon-pink);
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+.btn-shadow-main:hover, .btn-shadow-main.recording {
+  background: var(--neon-pink);
+  color: #000;
+  box-shadow: 0 0 30px rgba(255,45,120,0.5);
+  transform: scale(1.05);
+}
+
+.feedback-box {
+  background: rgba(0,212,255,0.05);
+  border: 1px solid rgba(0,212,255,0.2);
+  border-radius: 14px;
+  padding: 14px;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  min-height: 50px;
+  color: var(--text-dim);
+}
+.feedback-box.has-text { color: var(--text-main); }
+
+/* Phrase history */
+.phrase-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.phrase-item:hover { border-color: rgba(255,45,120,0.3); }
+.phrase-item.active { border-color: var(--neon-pink); background: rgba(255,45,120,0.05); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shadow-bg">
+
+  <div class="d-flex align-items-center gap-3 mb-4">
+    <a href="{{ url_for('dashboard') }}" style="color:var(--text-dim);text-decoration:none;font-size:1.3rem;">
+      <i class="bi bi-arrow-left"></i>
+    </a>
+    <h2 style="font-family:Orbitron,monospace;font-size:1.1rem;font-weight:900;color:var(--neon-pink);margin-bottom:0;text-shadow:0 0 20px rgba(255,45,120,0.4);">
+      🎙️ SHADOWING
+    </h2>
+  </div>
+
+  <!-- Intro -->
+  <p style="font-size:0.85rem;color:var(--text-dim);margin-bottom:20px;">
+    Ouça a frase, depois toque no botão do microfone e repita em voz alta. O <strong>Shadowing</strong> treina sua pronúncia e entonação naturalmente.
+  </p>
+
+  <!-- Main Card -->
+  <div class="main-card" id="mainCard">
+    <div class="tv-badge">
+      📺 BROOKLYN NINE-NINE
+    </div>
+
+    <div class="phrase-text" id="phraseText">{{ phrase.phrase }}</div>
+
+    <div class="character-tag">
+      <i class="bi bi-person-fill"></i>
+      <span id="characterName">{{ phrase.character }}</span>
+    </div>
+
+    <div class="context-tag" id="phraseContext">💡 {{ phrase.context }}</div>
+
+    <!-- TTS Button -->
+    <div class="d-flex justify-content-center gap-3 mt-3">
+      <button onclick="speakPhrase()" class="btn btn-neon-pink btn-sm px-3 py-2" id="ttsBtn">
+        <i class="bi bi-volume-up-fill me-1"></i>OUVIR
+      </button>
+      <button onclick="loadRandom()" class="btn btn-neon-cyan btn-sm px-3 py-2">
+        <i class="bi bi-shuffle me-1"></i>NOVA FRASE
+      </button>
+    </div>
+
+    <!-- Voice Visualizer -->
+    <div class="voice-viz" id="voiceViz">
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+      <div class="viz-bar"></div>
+    </div>
+
+    <!-- Mic Button -->
+    <button class="btn-shadow-main" id="micBtn" onclick="toggleRecording()">
+      <i class="bi bi-mic-fill" id="micIcon"></i>
+    </button>
+    <p style="font-family:Orbitron,monospace;font-size:0.65rem;color:var(--text-dim);margin-top:10px;" id="micStatus">
+      TOQUE PARA FALAR
+    </p>
+
+    <!-- Feedback -->
+    <div class="feedback-box" id="feedbackBox">
+      Repita a frase em voz alta para treinar sua pronúncia!
+    </div>
+  </div>
+
+  <!-- How To -->
+  <div style="background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:16px;padding:16px;margin-bottom:20px;">
+    <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:1.5px;color:var(--neon-cyan);margin-bottom:10px;">
+      📖 COMO PRATICAR
+    </p>
+    <div style="font-size:0.82rem;color:var(--text-dim);line-height:1.8;">
+      1. Clique em <strong style="color:var(--neon-pink);">OUVIR</strong> para ouvir a frase<br>
+      2. Toque no microfone e repita imediatamente<br>
+      3. Compare sua entonação com o original<br>
+      4. Repita até soar natural 🔥
+    </div>
+  </div>
+
+  <!-- All phrases -->
+  <p style="font-family:Orbitron,monospace;font-size:0.65rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:12px;">
+    TODAS AS FRASES ({{ all_phrases|length }})
+  </p>
+  {% for p in all_phrases %}
+  <div class="phrase-item {% if p.phrase == phrase.phrase %}active{% endif %}"
+       onclick="setPhrase({{ loop.index0 }})" id="phraseItem{{ loop.index0 }}">
+    <div style="font-weight:600;font-size:0.88rem;">"{{ p.phrase }}"</div>
+    <div style="font-size:0.72rem;color:var(--neon-orange);font-family:Orbitron,monospace;margin-top:4px;">
+      — {{ p.character }}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const allPhrases = {{ all_phrases | tojson }};
+let currentPhrase = {{ all_phrases | tojson | tojson }};
+let isRecording = false;
+let recognition = null;
+let currentIdx = 0;
+
+// Set initial
+{% for p in all_phrases %}
+{% if p.phrase == phrase.phrase %}
+currentIdx = {{ loop.index0 }};
+{% endif %}
+{% endfor %}
+
+function setPhrase(idx) {
+  currentIdx = idx;
+  const p = allPhrases[idx];
+  document.getElementById('phraseText').textContent = p.phrase;
+  document.getElementById('characterName').textContent = p.character;
+  document.getElementById('phraseContext').textContent = '💡 ' + p.context;
+  document.getElementById('feedbackBox').textContent = 'Clique em OUVIR para praticar esta frase!';
+  document.getElementById('feedbackBox').classList.remove('has-text');
+  document.querySelectorAll('.phrase-item').forEach((el, i) => {
+    el.classList.toggle('active', i === idx);
+  });
+}
+
+async function loadRandom() {
+  try {
+    const res = await fetch('/api/random_phrase');
+    const data = await res.json();
+    const idx = allPhrases.findIndex(p => p.phrase === data.phrase);
+    if (idx >= 0) setPhrase(idx);
+    else setPhrase(Math.floor(Math.random() * allPhrases.length));
+  } catch(e) {
+    setPhrase(Math.floor(Math.random() * allPhrases.length));
+  }
+}
+
+function speakPhrase() {
+  const text = document.getElementById('phraseText').textContent;
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    u.rate = 0.9;
+    u.pitch = 1;
+    const btn = document.getElementById('ttsBtn');
+    btn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i>TOCANDO...';
+    u.onend = () => { btn.innerHTML = '<i class="bi bi-volume-up-fill me-1"></i>OUVIR'; };
+    window.speechSynthesis.speak(u);
+  } else {
+    alert('Seu navegador não suporta síntese de voz. Use Chrome ou Safari.');
+  }
+}
+
+function toggleRecording() {
+  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+    document.getElementById('feedbackBox').textContent =
+      '⚠️ Reconhecimento de voz não suportado. Use Chrome ou Edge. Mas continue praticando em voz alta mesmo assim!';
+    document.getElementById('feedbackBox').classList.add('has-text');
+    return;
+  }
+  if (isRecording) {
+    stopRecording();
+  } else {
+    startRecording();
+  }
+}
+
+function startRecording() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  recognition = new SR();
+  recognition.lang = 'en-US';
+  recognition.interimResults = true;
+  recognition.maxAlternatives = 1;
+
+  recognition.onresult = (e) => {
+    const transcript = Array.from(e.results).map(r => r[0].transcript).join('');
+    const fb = document.getElementById('feedbackBox');
+    fb.textContent = '🎤 Você disse: "' + transcript + '"';
+    fb.classList.add('has-text');
+  };
+
+  recognition.onend = () => stopRecording();
+  recognition.onerror = () => stopRecording();
+  recognition.start();
+  isRecording = true;
+
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micIcon').className = 'bi bi-stop-fill';
+  document.getElementById('micStatus').textContent = 'GRAVANDO... FALE!';
+  document.getElementById('voiceViz').classList.add('active');
+}
+
+function stopRecording() {
+  if (recognition) { try { recognition.stop(); } catch(e) {} recognition = null; }
+  isRecording = false;
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('micIcon').className = 'bi bi-mic-fill';
+  document.getElementById('micStatus').textContent = 'TOQUE PARA FALAR';
+  document.getElementById('voiceViz').classList.remove('active');
+}
+</script>
+{% endblock %}
